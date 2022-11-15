@@ -50,13 +50,13 @@ try {
     echo white("Inserindo {$count_total} registros no SGBD... \n");
 
     for ($i = 0; $i < $count_total; $i++) {
-        $db->exec("delete from metadata;");
+        $db->exec("DELETE FROM metadata");
         $id = $i + 1;
         try {
-            $comando = $db->prepare("INSERT INTO metadata (id, A, B) VALUES (:id, :a, :b)");
+            $comando = $db->prepare("INSERT INTO metadata (id, A, B) VALUES (:id, :A, :B)");
             $comando->bindParam(':id', $id);
-            $comando->bindParam(':a', $metadata->INITIAL->A[$i]);
-            $comando->bindParam(':b', $metadata->INITIAL->B[$i]);
+            $comando->bindParam(':A', $metadata->INITIAL->A[$i]);
+            $comando->bindParam(':B', $metadata->INITIAL->B[$i]);
             $comando->execute();
             echo green("Inserido registro {$id} A={$metadata->INITIAL->A[$i]} e B={$metadata->INITIAL->B[$i]}\n");
             $count_actual++;
@@ -128,9 +128,9 @@ try {
 }
 
 function get_transaction_by_name($array, $name){
-    for ( $i =0; $i < count($array); $i++){
-        if ($array[$i]->get_name() == $name){
-            return $i;
+    for ( $j =0; $j < count($array); $j++){
+        if ($array[$j]->get_name() == $name){
+            return $j;
         }
     }
 
