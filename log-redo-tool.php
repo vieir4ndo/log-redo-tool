@@ -47,6 +47,7 @@ try {
     echo white("Inserindo {$count_total} registros no SGBD... \n");
 
     for ($i = 0; $i < $count_total; $i++) {
+        $db->exec("delete from metadata;");
         $id = $i + 1;
         try {
             $comando = $db->prepare("INSERT INTO metadata (id, a, b) VALUES (:id, :a, :b)");
