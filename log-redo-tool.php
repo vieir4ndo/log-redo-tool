@@ -44,19 +44,25 @@ try {
     $count_total = count($metadata->INITIAL->A);
     $count_actual = 0;
 
-    echo white("Inserindo {$count_total} registros no SGBD...\n");
+    echo white("Inserindo {$count_total} registros no SGBD... \n");
 
     for ($i = 0; $i < $count_total; $i++) {
-        $comando = $db->prepare("INSERT INTO metadata (id, a, b) VALUES (:id, :a, :b)");
-        $comando->bindParam(':id', $i);
-        $comando->bindParam(':a', $metadata->INITIAL->A[$i]);
-        $comando->bindParam(':b', $metadata->INITIAL->B[$i]);
-        $comando->execute();
-        green("Inserido registro A={$metadata->INITIAL->A[$i]} e B={$metadata->INITIAL->B[$i]}\n");
-        $count_actual++;
+        $id = $i + 1;
+        try {
+            $comando = $db->prepare("INSERT INTO metadata (id, a, b) VALUES (:id, :a, :b)");
+            $comando->bindParam(':id', $id);
+            $comando->bindParam(':a', $metadata->INITIAL->A[$i]);
+            $comando->bindParam(':b', $metadata->INITIAL->B[$i]);
+            $comando->execute();
+            echo green("Inserido registro {$id} A={$metadata->INITIAL->A[$i]} e B={$metadata->INITIAL->B[$i]}\n");
+            $count_actual++;
+        }
+        catch (Exception $e){
+            echo yellow("Houve um problem ao inserir registro {$id} A={$metadata->INITIAL->A[$i]} e B={$metadata->INITIAL->B[$i]}: " . $e->getMessage() . "\n");
+        }
     }
 
-    echo white("Finalizado inserção de {$count_total}/{$count_actual} registros no SGBD\n");
+    echo white("Finalizado inserção de {$count_actual}/{$count_total} registros no SGBD");
 
 } catch (PDOException $e) {
     echo 'Erro ao executar comando no banco de dados: ' . $e->getMessage() . "\n";
