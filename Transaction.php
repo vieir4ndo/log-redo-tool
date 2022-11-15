@@ -39,4 +39,8 @@ class Transaction
     public function save(){
         return $this->saved = true;
     }
+
+    public function get_operations(){
+        return $this->operations;
+    }
 }

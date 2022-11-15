@@ -53,7 +53,7 @@ try {
         $db->exec("delete from metadata;");
         $id = $i + 1;
         try {
-            $comando = $db->prepare("INSERT INTO metadata (id, a, b) VALUES (:id, :a, :b)");
+            $comando = $db->prepare("INSERT INTO metadata (id, A, B) VALUES (:id, :a, :b)");
             $comando->bindParam(':id', $id);
             $comando->bindParam(':a', $metadata->INITIAL->A[$i]);
             $comando->bindParam(':b', $metadata->INITIAL->B[$i]);
@@ -110,6 +110,11 @@ try {
 
     foreach ($transactions as $transaction){
         if ($transaction->is_commited() and !$transaction->is_saved()){
+
+            foreach ($transaction->get_operations() as $operation){
+                //$db->exec("UPDATE metadata SET {$operation->get_variable()}={$operation->get_new_value()} WHERE {$operation->get_variable()}={$operation->get_old_value()};");
+            }
+
             echo green("Transação {$transaction->get_name()} realizou  REDO.\n");
         }
         elseif(!$transaction->is_commited()){

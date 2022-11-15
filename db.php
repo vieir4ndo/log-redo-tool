@@ -17,8 +17,8 @@ try {
     if ($deve_inicializar_banco) {
         $db->exec("CREATE TABLE metadata (
             id INTEGER PRIMARY KEY,
-            a INTEGER,
-            b INTEGER
+            A INTEGER,
+            B INTEGER
         )");
     }
 } catch (PDOException $e) {
