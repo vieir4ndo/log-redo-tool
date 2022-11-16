@@ -76,15 +76,15 @@ try {
 
     foreach ($log_commands as $log){
         // extract to a clean function
-        if (empty($log))
+        if (empty($log) || StringHelper::contains($log, "crash"))
             continue;
 
         if (StringHelper::contains($log, "start")){
-            $transaction_name = StringHelper::regex("/<start (.*?)>/i", $log);
+            $transaction_name = trim(StringHelper::regex("/<start (.*?)>/i", $log));
             $transactions[] = new Transaction($transaction_name);
         }
         else if (StringHelper::contains($log, "commit")){
-            $transaction_name = StringHelper::regex("/<commit (.*?)>/i", $log);
+            $transaction_name = trim(StringHelper::regex("/<commit (.*?)>/i", $log));
             $transaction_index = get_transaction_by_name($transactions, $transaction_name);
             $transactions[$transaction_index]->finish();
         }
@@ -96,13 +96,13 @@ try {
             }
         }
         else {
-            $transaction_name = StringHelper::regex("/<(.*?),/i", $log);
+            $transaction_name = trim(StringHelper::regex("/<(.*?),/i", $log));
             $transaction_index = get_transaction_by_name($transactions, $transaction_name);
 
             $line = intval(StringHelper::regex("/<\S+,(.*?), /i", $log));
-            $variable = StringHelper::regex("/<\S+,\S+, (.*?),/i", $log);
-            $old_value = intval(StringHelper::regex("/<\S+,\S+, \S+,(.*?),/i", $log));
-            $new_value = intval(StringHelper::regex("/<\S+,\S+, \S+,\S+,(.*?)>/i", $log));
+            $variable = trim(StringHelper::regex("/<\S+,\S+,(.*?),/i", $log));
+            $old_value = intval(StringHelper::regex("/<\S+,\S+,\S+,(.*?),/i", $log));
+            $new_value = intval(StringHelper::regex("/<\S+,\S+,\S+,\S+,(.*?)>/i", $log));
 
             $transactions[$transaction_index]->add_operation(new Operation($line, $variable, $old_value, $new_value));
         }
