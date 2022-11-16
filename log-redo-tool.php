@@ -47,10 +47,12 @@ try {
     $count_total = count($metadata->INITIAL->A);
     $count_actual = 0;
 
+    $comando = $db->prepare("DELETE FROM metadata");
+    $comando->execute();
+
     echo white("Inserindo {$count_total} registros no SGBD... \n");
 
     for ($i = 0; $i < $count_total; $i++) {
-        $db->exec("DELETE FROM metadata");
         $id = $i + 1;
         try {
             $comando = $db->prepare("INSERT INTO metadata (id, A, B) VALUES (:id, :A, :B)");
@@ -87,8 +89,6 @@ try {
             $transactions[$transaction_index]->finish();
         }
         else if (StringHelper::contains($log, "CKPT")){
-            // acho que até aqui já foi salvo no banco físico
-            // já salvou no banco todos mundo que está commitado
             foreach ($transactions as $transaction){
                 if ($transaction->is_commited()){
                     $transaction->save();
@@ -111,8 +111,44 @@ try {
     foreach ($transactions as $transaction){
         if ($transaction->is_commited() and !$transaction->is_saved()){
 
-            foreach ($transaction->get_operations() as $operation){
-                //$db->exec("UPDATE metadata SET {$operation->get_variable()}={$operation->get_new_value()} WHERE {$operation->get_variable()}={$operation->get_old_value()};");
+            $operations_A = $transaction->get_operations_for_A();
+
+            if (!empty($operations_A)){
+                foreach ($operations_A as $operation_A){
+                    $comando = $db->prepare("SELECT * FROM metadata WHERE A=(:A)");
+                    $comando->bindParam(':A', $operation_A->get_old_value());
+                    $comando->execute();
+
+                    $resultado = $comando->fetchAll(PDO::FETCH_ASSOC);
+
+                    if (count($resultado) > 0) {
+                        $comando = $db->prepare("UPDATE metadata SET A=:new_A WHERE A=(:A)");
+                        $comando->bindParam(':new_A', $operation_A->get_new_value());
+                        $comando->bindParam(':A', $operation_A->get_old_value());
+                        $comando->execute();
+                        echo green("Dado A atualizado pela transação {$transaction->get_name()} de {$operation_A->get_old_value()} para {$operation_A->get_new_value()}\n");
+                    }
+                }
+            }
+
+            $operations_B = $transaction->get_operations_for_B();
+
+            if (!empty($operations_B)){
+                foreach ($operations_B as $operation_B) {
+                    $comando = $db->prepare("SELECT * FROM metadata WHERE B=(:B)");
+                    $comando->bindParam(':B', $operation_B->get_old_value());
+                    $comando->execute();
+
+                    $resultado = $comando->fetchAll(PDO::FETCH_ASSOC);
+
+                    if (count($resultado) > 0) {
+                        $comando = $db->prepare("UPDATE metadata SET B=:new_B WHERE B=(:B)");
+                        $comando->bindParam(':new_B', $operation_B->get_new_value());
+                        $comando->bindParam(':B', $operation_B->get_old_value());
+                        $comando->execute();
+                        echo green("Dado B atualizado pela transação {$transaction->get_name()} de {$operation_B->get_old_value()} para {$operation_B->get_new_value()}\n");
+                    }
+                }
             }
 
             echo green("Transação {$transaction->get_name()} realizou  REDO.\n");
