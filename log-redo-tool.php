@@ -74,11 +74,12 @@ try {
 
     $transactions = [];
 
-    foreach ($log_commands as $log){
-        // extract to a clean function
-        if (empty($log) || StringHelper::contains($log, "crash"))
-            continue;
+    foreach ($log_commands as $log) {
+        if (empty($log))
+            unset($log, $transaction);
+    }
 
+    foreach ($log_commands as $log) {
         if (StringHelper::contains($log, "start")){
             $transaction_name = trim(StringHelper::regex("/<start (.*?)>/i", $log));
             $transactions[] = new Transaction($transaction_name);
@@ -94,6 +95,9 @@ try {
                     $transaction->save();
                 }
             }
+        }
+        else if (empty($log) || StringHelper::contains($log, "crash")) {
+            continue;
         }
         else {
             $transaction_name = trim(StringHelper::regex("/<(.*?),/i", $log));
