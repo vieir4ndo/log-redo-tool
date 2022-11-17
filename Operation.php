@@ -2,14 +2,14 @@
 
 class Operation
 {
-    private int $line;
+    private int $id;
     private string $variable;
     private int $old_value;
     private int $new_value;
 
-    public function __construct($line, $variable, $old_value, $new_value)
+    public function __construct($id, $variable, $old_value, $new_value)
     {
-        $this->line = $line;
+        $this->id = $id;
         $this->variable = $variable;
         $this->old_value = $old_value;
         $this->new_value = $new_value;
@@ -25,5 +25,9 @@ class Operation
 
     public function get_new_value(){
         return $this->new_value;
+    }
+
+    public function get_id(){
+        return $this->id;
     }
 }

@@ -100,57 +100,44 @@ try {
             continue;
         }
         else {
-            $transaction_name = trim(StringHelper::regex("/<(.*?),/i", $log));
+            $log = str_replace(["<", ">"], "", $log);
+            $params = explode(",", $log);
+            $transaction_name = trim($params[0]);
             $transaction_index = get_transaction_by_name($transactions, $transaction_name);
 
-            $line = intval(StringHelper::regex("/<\S+,(.*?), /i", $log));
-            $variable = trim(StringHelper::regex("/<\S+,\S+,(.*?),/i", $log));
-            $old_value = intval(StringHelper::regex("/<\S+,\S+,\S+,(.*?),/i", $log));
-            $new_value = intval(StringHelper::regex("/<\S+,\S+,\S+,\S+,(.*?)>/i", $log));
+            $id = intval(trim($params[1]));
+            $variable = trim($params[2]);
+            $old_value = intval(trim($params[3]));
+            $new_value = intval(trim($params[4]));
 
-            $transactions[$transaction_index]->add_operation(new Operation($line, $variable, $old_value, $new_value));
+            $transactions[$transaction_index]->add_operation(new Operation($id, $variable, $old_value, $new_value));
         }
     }
 
     foreach ($transactions as $transaction){
         if ($transaction->is_commited() and !$transaction->is_saved()){
 
-            $operations_A = $transaction->get_operations_for_A();
+            $operations = $transaction->get_operations();
 
-            if (!empty($operations_A)){
-                foreach ($operations_A as $operation_A){
-                    $comando = $db->prepare("SELECT * FROM metadata WHERE A=(:A)");
-                    $comando->bindParam(':A', $operation_A->get_old_value());
+            if (count($operations)>0){
+                foreach ($operations as $operation) {
+                    $var = $operation->get_variable();
+                    $id = $operation->get_id();
+                    $old_value = $operation->get_old_value();
+                    $new_value = $operation->get_new_value();
+
+                    $comando = $db->prepare("SELECT {$var} FROM metadata WHERE id=(:id)");
+                    $comando->bindParam(':id', $id);
                     $comando->execute();
 
                     $resultado = $comando->fetchAll(PDO::FETCH_ASSOC);
 
-                    if (count($resultado) > 0) {
-                        $comando = $db->prepare("UPDATE metadata SET A=:new_A WHERE A=(:A)");
-                        $comando->bindParam(':new_A', $operation_A->get_new_value());
-                        $comando->bindParam(':A', $operation_A->get_old_value());
+                    if ($resultado[0][$var] == $old_value) {
+                        $comando = $db->prepare("UPDATE metadata SET {$var}=(:new_B) WHERE id=(:id)");
+                        $comando->bindParam(':new_B', $new_value);
+                        $comando->bindParam(':id', $id);
                         $comando->execute();
-                        echo green("Dado A atualizado pela transação {$transaction->get_name()} de {$operation_A->get_old_value()} para {$operation_A->get_new_value()}\n");
-                    }
-                }
-            }
-
-            $operations_B = $transaction->get_operations_for_B();
-
-            if (!empty($operations_B)){
-                foreach ($operations_B as $operation_B) {
-                    $comando = $db->prepare("SELECT * FROM metadata WHERE B=(:B)");
-                    $comando->bindParam(':B', $operation_B->get_old_value());
-                    $comando->execute();
-
-                    $resultado = $comando->fetchAll(PDO::FETCH_ASSOC);
-
-                    if (count($resultado) > 0) {
-                        $comando = $db->prepare("UPDATE metadata SET B=:new_B WHERE B=(:B)");
-                        $comando->bindParam(':new_B', $operation_B->get_new_value());
-                        $comando->bindParam(':B', $operation_B->get_old_value());
-                        $comando->execute();
-                        echo green("Dado B atualizado pela transação {$transaction->get_name()} de {$operation_B->get_old_value()} para {$operation_B->get_new_value()}\n");
+                        //echo green("Dado {$operation->get_variable()} atualizado pela transação {$transaction->get_name()} de {$operation->get_old_value()} para {$operation->get_new_value()}\n");
                     }
                 }
             }

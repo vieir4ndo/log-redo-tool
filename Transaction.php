@@ -40,25 +40,7 @@ class Transaction
         return $this->saved = true;
     }
 
-    public function get_operations_for_A(){
-        $operations_a = [];
-
-        for ($i = count($this->operations); $i == 0; $i--){
-            if ($this->operations[$i]->get_variable() == "A"){
-                $operations_a[] = $this->operations[$i];
-            }
-        }
-        return $operations_a;
-    }
-
-    public function get_operations_for_B(){
-        $operations_b = [];
-
-        for ($i = count($this->operations); $i == 0; $i--){
-            if ($this->operations[$i]->get_variable() == "B"){
-                $operations_b[] = $this->operations[$i];
-            }
-        }
-        return $operations_b;
+    public function get_operations(){
+       return $this->operations;
     }
 }
