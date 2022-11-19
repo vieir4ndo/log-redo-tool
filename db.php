@@ -22,7 +22,7 @@ try {
         )");
     }
 } catch (PDOException $e) {
-    echo 'Erro com o banco de dados: ' . $e->getMessage() . "\n";
+    magenta('Erro ao executar comando no banco de dados: ' . $e->getMessage());
     exit();
 }
 

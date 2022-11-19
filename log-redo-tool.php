@@ -34,7 +34,7 @@ try {
     execute_redo($db, $transactions);
 
 } catch (PDOException $e) {
-    echo 'Erro ao executar comando no banco de dados: ' . $e->getMessage() . "\n";
+    magenta('Erro ao executar comando no banco de dados: ' . $e->getMessage());
     exit();
 }
 

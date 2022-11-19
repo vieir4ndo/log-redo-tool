@@ -6,36 +6,36 @@ use Colors\Color;
 
 function yellow($str, $eol = false) {
     $c = new Color();
-    return $c($str)->yellow . ($eol ? PHP_EOL : '');
+    echo $c($str)->yellow . ($eol ? PHP_EOL : '') . "\n";
 }
 
 function magenta($str, $eol = false) {
     $c = new Color();
-    return $c($str)->magenta . ($eol ? PHP_EOL : '');
+    echo $c($str)->magenta . ($eol ? PHP_EOL : '') . "\n";
 }
 
 function green($str, $eol = false) {
     $c = new Color();
-    return $c($str)->green . ($eol ? PHP_EOL : '');
+    echo $c($str)->green . ($eol ? PHP_EOL : '') . "\n";
 }
 
 function white($str, $eol = false) {
     $c = new Color();
-    return $c($str)->white . ($eol ? PHP_EOL : '');
+    echo $c($str)->white . ($eol ? PHP_EOL : '') . "\n";
 }
 
 function get_and_validate_metadata_file($path){
     @$file = file_get_contents($path);
 
     if ($file === false) {
-        echo "Erro ao ler arquivo informado em --metadata: '$path'.\n";
+        magenta("Erro ao ler arquivo informado em --metadata: '$path'");
         exit(1);
     }
 
     $metadata = @json_decode($file);
 
     if ($metadata === null) {
-        echo 'Erro processar lista de metadata: ' . json_last_error_msg() . "\n";
+        magenta('Erro processar lista de metadata: ' . json_last_error_msg());
         exit(3);
     }
 
@@ -46,7 +46,7 @@ function get_and_validate_log_file($path){
     @$file = file_get_contents($path);
 
     if ($file === false) {
-        echo "Erro ao ler arquivo informado em --log: '$path'.\n";
+        magenta("Erro ao ler arquivo informado em --log: '$path'.");
         exit(1);
     }
 
@@ -61,7 +61,7 @@ function insert_metadata_into_database($db, $metadata){
     $comando = $db->prepare("DELETE FROM metadata");
     $comando->execute();
 
-    echo white("Inserindo {$count_total} registros no SGBD... \n");
+    white("Inserindo {$count_total} registros no SGBD... ");
 
     for ($i = 0; $i < $count_total; $i++) {
         $id = $i + 1;
@@ -71,15 +71,15 @@ function insert_metadata_into_database($db, $metadata){
             $comando->bindParam(':A', $metadata->INITIAL->A[$i]);
             $comando->bindParam(':B', $metadata->INITIAL->B[$i]);
             $comando->execute();
-            echo green("Inserido registro {$id} A={$metadata->INITIAL->A[$i]} e B={$metadata->INITIAL->B[$i]}\n");
+            green("Inserido registro {$id} A={$metadata->INITIAL->A[$i]} e B={$metadata->INITIAL->B[$i]}");
             $count_actual++;
         }
         catch (Exception $e){
-            echo yellow("Houve um problem ao inserir registro {$id} A={$metadata->INITIAL->A[$i]} e B={$metadata->INITIAL->B[$i]}: " . $e->getMessage() . "\n");
+            yellow("Houve um problem ao inserir registro {$id} A={$metadata->INITIAL->A[$i]} e B={$metadata->INITIAL->B[$i]}: " . $e->getMessage());
         }
     }
 
-    echo white("Finalizado inserção de {$count_actual}/{$count_total} registros no SGBD\n");
+    white("Finalizado inserção de {$count_actual}/{$count_total} registros no SGBD");
 
 }
 
@@ -217,15 +217,15 @@ function execute_redo($db, $transactions){
                         $comando->bindParam(':new_B', $new_value);
                         $comando->bindParam(':id', $id);
                         $comando->execute();
-                        echo green("Dado {$operation->get_variable()} atualizado pela transação {$transaction->get_name()} de {$operation->get_old_value()} para {$operation->get_new_value()}\n");
+                        green("Dado {$operation->get_variable()} atualizado pela transação {$transaction->get_name()} de {$operation->get_old_value()} para {$operation->get_new_value()}");
                     }
                 }
             }
 
-            echo green("Transação {$transaction->get_name()} realizou  REDO.\n");
+            green("Transação {$transaction->get_name()} realizou  REDO.");
         }
         elseif(!$transaction->is_commited()){
-            echo yellow("Transação {$transaction->get_name()} não realizou  REDO.\n");
+            yellow("Transação {$transaction->get_name()} não realizou  REDO.");
         }
     }
 }
