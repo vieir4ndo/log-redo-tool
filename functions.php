@@ -147,17 +147,24 @@ function read_transactions_in_reverse($log_commands)
         return read_transactions_in_order($log_commands);
     }
 
-    $transactions_opened = StringHelper::regex("/<CKPT \((.*?)\)>/i", $checkpoint);
-    $transactions_opened = explode(",", $transactions_opened);
+    $transactions_opened_string = StringHelper::regex("/<CKPT \((.*?)\)>/i", $checkpoint);
+    $transactions_opened = explode(",", $transactions_opened_string);
 
     $transactions_opened = array_filter($transactions_opened);
 
-    if (empty($transactions_opened)) {
-        return $transactions;
-    }
-
     for ($i = 0; $i < count($transactions_opened); $i++) {
         $transactions_opened[$i] = trim($transactions_opened[$i]);
+    }
+
+    for ($i = $index+1; $i < count($log_commands); $i++){
+        if (StringHelper::contains($log_commands[$i], "start")) {
+            $transactions_opened[] = trim(StringHelper::regex("/<start (.*?)>/i", $log_commands[$i]));
+        }
+    }
+
+    // rever
+    if (empty($transactions_opened)) {
+        return $transactions;
     }
 
     foreach ($transactions_opened as $transaction_opened_name) {
@@ -192,6 +199,12 @@ function read_transactions_in_reverse($log_commands)
 
 function execute_redo($db, $transactions)
 {
+    $dados_atualizados = [];
+
+    $count = count($transactions);
+
+    white("Listando as {$count} transações...");
+
     foreach ($transactions as $transaction) {
         if ($transaction->is_commited() and !$transaction->is_saved()) {
 
@@ -215,7 +228,7 @@ function execute_redo($db, $transactions)
                         $comando->bindParam(':new_B', $new_value);
                         $comando->bindParam(':id', $id);
                         $comando->execute();
-                        green("Dado {$operation->get_variable()} atualizado pela transação {$transaction->get_name()} de {$operation->get_old_value()} para {$operation->get_new_value()}");
+                        $dados_atualizados[] = "Dado {$operation->get_variable()} atualizado pela transação {$transaction->get_name()} de {$operation->get_old_value()} para {$operation->get_new_value()}";
                     }
                 }
             }
@@ -225,4 +238,14 @@ function execute_redo($db, $transactions)
             yellow("Transação {$transaction->get_name()} não realizou  REDO.");
         }
     }
+
+    white("Finalizado a listagem das transações...");
+
+    white("Listando as alterações realizadas no SGBD pelas transações...");
+
+    foreach ($dados_atualizados as $dado){
+        green($dado);
+    }
+
+    white("Finalizado a listagem das alterações realizadas no SGBD pelas transações...");
 }
