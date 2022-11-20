@@ -162,7 +162,6 @@ function read_transactions_in_reverse($log_commands)
         }
     }
 
-    // rever
     if (empty($transactions_opened)) {
         return $transactions;
     }
