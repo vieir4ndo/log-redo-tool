@@ -248,3 +248,25 @@ function execute_redo($db, $transactions)
 
     white("Finalizado a listagem das alterações realizadas no SGBD pelas transações...");
 }
+
+function get_metadata_from_database($db){
+    $comando = $db->prepare("SELECT * FROM metadata");
+    $comando->execute();
+
+    $resultado = $comando->fetchAll(PDO::FETCH_ASSOC);
+
+    $ids =[]; $As = []; $Bs=[];
+
+    foreach ($resultado as $tupla){
+        $ids[] = $tupla["id"];
+        $As[] = $tupla["A"];
+        $Bs[] = $tupla["B"];
+    }
+
+    green(json_encode([
+        "id" => $ids,
+        "A" => $As,
+        "B" => $Bs
+    ]));
+
+}

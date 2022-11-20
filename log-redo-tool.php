@@ -34,6 +34,8 @@ try {
 
     execute_redo($db, $transactions);
 
+    get_metadata_from_database($db);
+
 } catch (PDOException $e) {
     magenta('Erro ao executar comando no banco de dados: ' . $e->getMessage());
     exit();
