@@ -38,9 +38,10 @@ try {
     exit();
 }
 
-function get_transaction_by_name($array, $name){
-    for ( $j =0; $j < count($array); $j++){
-        if ($array[$j]->get_name() == $name){
+function get_transaction_by_name($array, $name)
+{
+    for ($j = 0; $j < count($array); $j++) {
+        if ($array[$j]->get_name() == $name) {
             return $j;
         }
     }
