@@ -10,6 +10,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 use Garden\Cli\Cli;
 
 try {
+    error_reporting(E_ERROR | E_PARSE);
 
     $cli = new Cli();
 
