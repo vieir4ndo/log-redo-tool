@@ -26,7 +26,7 @@ class StringHelper
 
     public static function contains($haystack, $needles)
     {
-        foreach ((array) $needles as $needle) {
+        foreach ((array)$needles as $needle) {
             if ($needle !== '' && mb_stripos($haystack, $needle) !== false) {
                 return true;
             }

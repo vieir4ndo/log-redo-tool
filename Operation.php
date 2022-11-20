@@ -15,19 +15,23 @@ class Operation
         $this->new_value = $new_value;
     }
 
-    public function get_variable(){
+    public function get_variable()
+    {
         return $this->variable;
     }
 
-    public function get_old_value(){
+    public function get_old_value()
+    {
         return $this->old_value;
     }
 
-    public function get_new_value(){
+    public function get_new_value()
+    {
         return $this->new_value;
     }
 
-    public function get_id(){
+    public function get_id()
+    {
         return $this->id;
     }
 }

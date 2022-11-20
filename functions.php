@@ -4,27 +4,32 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use Colors\Color;
 
-function yellow($str, $eol = false) {
+function yellow($str, $eol = false)
+{
     $c = new Color();
     echo $c($str)->yellow . ($eol ? PHP_EOL : '') . "\n";
 }
 
-function magenta($str, $eol = false) {
+function magenta($str, $eol = false)
+{
     $c = new Color();
     echo $c($str)->magenta . ($eol ? PHP_EOL : '') . "\n";
 }
 
-function green($str, $eol = false) {
+function green($str, $eol = false)
+{
     $c = new Color();
     echo $c($str)->green . ($eol ? PHP_EOL : '') . "\n";
 }
 
-function white($str, $eol = false) {
+function white($str, $eol = false)
+{
     $c = new Color();
     echo $c($str)->white . ($eol ? PHP_EOL : '') . "\n";
 }
 
-function get_and_validate_metadata_file($path){
+function get_and_validate_metadata_file($path)
+{
     @$file = file_get_contents($path);
 
     if ($file === false) {
@@ -42,7 +47,8 @@ function get_and_validate_metadata_file($path){
     return $metadata;
 }
 
-function get_and_validate_log_file($path){
+function get_and_validate_log_file($path)
+{
     @$file = file_get_contents($path);
 
     if ($file === false) {
@@ -53,7 +59,8 @@ function get_and_validate_log_file($path){
     return array_filter(explode("\n", $file));
 }
 
-function insert_metadata_into_database($db, $metadata){
+function insert_metadata_into_database($db, $metadata)
+{
 
     $count_total = count($metadata->INITIAL->A);
     $count_actual = 0;
@@ -73,8 +80,7 @@ function insert_metadata_into_database($db, $metadata){
             $comando->execute();
             green("Inserido registro {$id} A={$metadata->INITIAL->A[$i]} e B={$metadata->INITIAL->B[$i]}");
             $count_actual++;
-        }
-        catch (Exception $e){
+        } catch (Exception $e) {
             yellow("Houve um problem ao inserir registro {$id} A={$metadata->INITIAL->A[$i]} e B={$metadata->INITIAL->B[$i]}: " . $e->getMessage());
         }
     }
@@ -83,30 +89,27 @@ function insert_metadata_into_database($db, $metadata){
 
 }
 
-function read_transactions_in_order($log_commands){
+function read_transactions_in_order($log_commands)
+{
     $transactions = [];
 
     foreach ($log_commands as $log) {
-        if (StringHelper::contains($log, "start")){
+        if (StringHelper::contains($log, "start")) {
             $transaction_name = trim(StringHelper::regex("/<start (.*?)>/i", $log));
             $transactions[] = new Transaction($transaction_name);
-        }
-        else if (StringHelper::contains($log, "commit")){
+        } else if (StringHelper::contains($log, "commit")) {
             $transaction_name = trim(StringHelper::regex("/<commit (.*?)>/i", $log));
             $transaction_index = get_transaction_by_name($transactions, $transaction_name);
             $transactions[$transaction_index]->finish();
-        }
-        else if (StringHelper::contains($log, "CKPT")){
-            foreach ($transactions as $transaction){
-                if ($transaction->is_commited()){
+        } else if (StringHelper::contains($log, "CKPT")) {
+            foreach ($transactions as $transaction) {
+                if ($transaction->is_commited()) {
                     $transaction->save();
                 }
             }
-        }
-        else if (empty($log) || StringHelper::contains($log, "crash")) {
+        } else if (empty($log) || StringHelper::contains($log, "crash")) {
             continue;
-        }
-        else {
+        } else {
             $log = str_replace(["<", ">"], "", $log);
             $params = explode(",", $log);
             $transaction_name = trim($params[0]);
@@ -127,10 +130,10 @@ function read_transactions_in_order($log_commands){
 function read_transactions_in_reverse($log_commands)
 {
     $transactions = [];
-    $index= null;
+    $index = null;
     $checkpoint = null;
 
-    for ($i = count($log_commands) - 1; $i>=0 ; $i--) {
+    for ($i = count($log_commands) - 1; $i >= 0; $i--) {
         $log = $log_commands[$i];
 
         if (StringHelper::contains($log, "CKPT")) {
@@ -140,7 +143,7 @@ function read_transactions_in_reverse($log_commands)
         }
     }
 
-    if ($index == null){
+    if ($index == null) {
         return read_transactions_in_order($log_commands);
     }
 
@@ -149,29 +152,26 @@ function read_transactions_in_reverse($log_commands)
 
     $transactions_opened = array_filter($transactions_opened);
 
-    if (empty($transactions_opened)){
+    if (empty($transactions_opened)) {
         return $transactions;
     }
 
-    for ($i =0; $i < count($transactions_opened); $i++){
+    for ($i = 0; $i < count($transactions_opened); $i++) {
         $transactions_opened[$i] = trim($transactions_opened[$i]);
     }
 
-    foreach ($transactions_opened as $transaction_opened_name){
+    foreach ($transactions_opened as $transaction_opened_name) {
 
         foreach ($log_commands as $log) {
             if (StringHelper::contains($log, $transaction_opened_name)) {
-                if (StringHelper::contains($log, "start")){
+                if (StringHelper::contains($log, "start")) {
                     $transactions[] = new Transaction($transaction_opened_name);
-                }
-                else if (StringHelper::contains($log, "commit")){
+                } else if (StringHelper::contains($log, "commit")) {
                     $transaction_index = get_transaction_by_name($transactions, $transaction_opened_name);
                     $transactions[$transaction_index]->finish();
-                }
-                else if (empty($log) || StringHelper::contains($log, "crash") || StringHelper::contains($log, "CKPT")) {
+                } else if (empty($log) || StringHelper::contains($log, "crash") || StringHelper::contains($log, "CKPT")) {
                     continue;
-                }
-                else {
+                } else {
                     $log = str_replace(["<", ">"], "", $log);
                     $params = explode(",", $log);
                     $transaction_index = get_transaction_by_name($transactions, $transaction_opened_name);
@@ -190,13 +190,14 @@ function read_transactions_in_reverse($log_commands)
     return $transactions;
 }
 
-function execute_redo($db, $transactions){
-    foreach ($transactions as $transaction){
-        if ($transaction->is_commited() and !$transaction->is_saved()){
+function execute_redo($db, $transactions)
+{
+    foreach ($transactions as $transaction) {
+        if ($transaction->is_commited() and !$transaction->is_saved()) {
 
             $operations = $transaction->get_operations();
 
-            if (count($operations)>0){
+            if (count($operations) > 0) {
                 foreach ($operations as $operation) {
                     $var = $operation->get_variable();
                     $id = $operation->get_id();
@@ -220,8 +221,7 @@ function execute_redo($db, $transactions){
             }
 
             green("Transação {$transaction->get_name()} realizou  REDO.");
-        }
-        elseif(!$transaction->is_commited()){
+        } elseif (!$transaction->is_commited()) {
             yellow("Transação {$transaction->get_name()} não realizou  REDO.");
         }
     }

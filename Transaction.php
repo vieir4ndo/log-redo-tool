@@ -16,31 +16,38 @@ class Transaction
         $this->saved = false;
     }
 
-    public function add_operation(Operation $operation){
+    public function add_operation(Operation $operation)
+    {
         $this->operations[] = $operation;
     }
 
-    public function finish(){
+    public function finish()
+    {
         $this->commited = true;
     }
 
-    public function is_commited(){
+    public function is_commited()
+    {
         return $this->commited;
     }
 
-    public function get_name(){
+    public function get_name()
+    {
         return $this->name;
     }
 
-    public function is_saved(){
+    public function is_saved()
+    {
         return $this->saved;
     }
 
-    public function save(){
+    public function save()
+    {
         return $this->saved = true;
     }
 
-    public function get_operations(){
-       return $this->operations;
+    public function get_operations()
+    {
+        return $this->operations;
     }
 }
