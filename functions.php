@@ -227,7 +227,7 @@ function execute_redo($db, $transactions)
                         $comando->bindParam(':new_B', $new_value);
                         $comando->bindParam(':id', $id);
                         $comando->execute();
-                        $dados_atualizados[] = "Dado {$operation->get_variable()} atualizado pela transação {$transaction->get_name()} de {$operation->get_old_value()} para {$operation->get_new_value()}";
+                        $dados_atualizados[] = "Dado {$operation->get_variable()} atualizado pela transação {$transaction->get_name()} de {$operation->get_old_value()} para {$operation->get_new_value()} na tupla id={$operation->get_id()}";
                     }
                 }
             }
