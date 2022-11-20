@@ -29,7 +29,7 @@ try {
 
     insert_metadata_into_database($db, $metadata);
 
-    $transactions = read_transactions_in_order($log_commands);
+    $transactions = read_transactions_in_reverse($log_commands);
 
     execute_redo($db, $transactions);
 

@@ -127,66 +127,63 @@ function read_transactions_in_order($log_commands){
 function read_transactions_in_reverse($log_commands)
 {
     $transactions = [];
+    $index= null;
+    $checkpoint = null;
 
-    for ($i = count($log_commands); $i==0 ; $i--) {
-
+    for ($i = count($log_commands) - 1; $i>=0 ; $i--) {
         $log = $log_commands[$i];
 
-        if (StringHelper::contains($log, "start")){
-            continue;
+        if (StringHelper::contains($log, "CKPT")) {
+            $index = $i;
+            $checkpoint = $log;
+            break;
         }
-        else if (StringHelper::contains($log, "commit")){
-            $transaction_name = trim(StringHelper::regex("/<commit (.*?)>/i", $log));
-            $transaction_index = get_transaction_by_name($transactions, $transaction_name);
+    }
 
-            if ($transaction_index == null){
-                $transactions[] = new Transaction($transaction_name);
-                $transaction_index = get_transaction_by_name($transactions, $transaction_name);
-            }
+    if ($index == null){
+        return read_transactions_in_order($log_commands);
+    }
 
-            $transactions[$transaction_index]->finish();
-        }
-        else if (StringHelper::contains($log, "CKPT")){
+    $transactions_opened = StringHelper::regex("/<CKPT \((.*?)\)>/i", $checkpoint);
+    $transactions_opened = explode(",", $transactions_opened);
 
-            $transactions_opened = StringHelper::regex("/<CKPT (.*?)>/i", $log);
+    $transactions_opened = array_filter($transactions_opened);
 
-            $transactions_opened = explode($transactions_opened, "\n");
-            $transactions_opened = array_filter($transactions_opened);
+    if (empty($transactions_opened)){
+        return $transactions;
+    }
 
-            if (empty($transactions_opened)){
-                return [];
-            }
+    for ($i =0; $i < count($transactions_opened); $i++){
+        $transactions_opened[$i] = trim($transactions_opened[$i]);
+    }
 
-            for ($i =0; $i < count($transactions_opened); $i++){
-                $transactions_opened[$i] = trim($transactions_opened[$i]);
-            }
+    foreach ($transactions_opened as $transaction_opened_name){
 
-            foreach ($transactions as $transaction){
-                if (!in_array($transactions_opened, $transaction->get_name()) && !$transaction->is_saved()){
-                    $transaction->save();
+        foreach ($log_commands as $log) {
+            if (StringHelper::contains($log, $transaction_opened_name)) {
+                if (StringHelper::contains($log, "start")){
+                    $transactions[] = new Transaction($transaction_opened_name);
+                }
+                else if (StringHelper::contains($log, "commit")){
+                    $transaction_index = get_transaction_by_name($transactions, $transaction_opened_name);
+                    $transactions[$transaction_index]->finish();
+                }
+                else if (empty($log) || StringHelper::contains($log, "crash") || StringHelper::contains($log, "CKPT")) {
+                    continue;
+                }
+                else {
+                    $log = str_replace(["<", ">"], "", $log);
+                    $params = explode(",", $log);
+                    $transaction_index = get_transaction_by_name($transactions, $transaction_opened_name);
+
+                    $id = intval(trim($params[1]));
+                    $variable = trim($params[2]);
+                    $old_value = intval(trim($params[3]));
+                    $new_value = intval(trim($params[4]));
+
+                    $transactions[$transaction_index]->add_operation(new Operation($id, $variable, $old_value, $new_value));
                 }
             }
-        }
-        else if (empty($log) || StringHelper::contains($log, "crash")) {
-            continue;
-        }
-        else {
-            $log = str_replace(["<", ">"], "", $log);
-            $params = explode(",", $log);
-            $transaction_name = trim($params[0]);
-            $transaction_index = get_transaction_by_name($transactions, $transaction_name);
-
-            if ($transaction_index == null){
-                $transactions[] = new Transaction($transaction_name);
-                $transaction_index = get_transaction_by_name($transactions, $transaction_name);
-            }
-
-            $id = intval(trim($params[1]));
-            $variable = trim($params[2]);
-            $old_value = intval(trim($params[3]));
-            $new_value = intval(trim($params[4]));
-
-            $transactions[$transaction_index]->add_operation(new Operation($id, $variable, $old_value, $new_value));
         }
     }
 
