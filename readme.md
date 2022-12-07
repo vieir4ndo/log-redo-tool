@@ -58,6 +58,6 @@ php log-redo-tool.php
 
 Caso deseje utilizar entradas diferentes dessas, apenas informe o diretório para as mesmas como no exemplo abaixo:
 ```
-php log-redo-tool.php --metada=/c/teste/teste.json --log=/c/teste/teste.json
+php log-redo-tool.php --metadata=/c/teste/teste.json --log=/c/teste/teste.json
 ```
 

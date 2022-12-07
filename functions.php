@@ -222,13 +222,14 @@ function execute_redo($db, $transactions)
 
                     $resultado = $comando->fetchAll(PDO::FETCH_ASSOC);
 
-                    if ($resultado[0][$var] == $old_value) {
+                    // redo should not consider old value
+                    //if ($resultado[0][$var] == $old_value) {
                         $comando = $db->prepare("UPDATE metadata SET {$var}=(:new_B) WHERE id=(:id)");
                         $comando->bindParam(':new_B', $new_value);
                         $comando->bindParam(':id', $id);
                         $comando->execute();
                         $dados_atualizados[] = "Dado {$operation->get_variable()} atualizado pela transação {$transaction->get_name()} de {$operation->get_old_value()} para {$operation->get_new_value()} na tupla id={$operation->get_id()}";
-                    }
+                   // }
                 }
             }
 
